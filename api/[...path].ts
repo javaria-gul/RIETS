@@ -23,7 +23,7 @@ async function ensureTelemetryData() {
   telemetryBootstrapPromise = (async () => {
     if (isSimulated || !db) {
       if (simDb.anomalyLogs.length === 0) {
-        runDetectionAudit();
+        await runDetectionAudit();
       }
       return;
     }

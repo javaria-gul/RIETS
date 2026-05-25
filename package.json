@@ -14,7 +14,8 @@
     "db:reset": "tsx src/db/reset.ts",
     "db:push": "drizzle-kit push:pg",
     "db:seed": "tsx src/db/seed.ts",
-    "seed": "tsx src/db/seed.ts"
+    "seed": "tsx src/db/seed.ts",
+    "db:run-seed": "tsx src/db/run-seed.ts"
     
   },
   "dependencies": {

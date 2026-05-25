@@ -8,30 +8,39 @@ dotenv.config();
 const connectionString = process.env.DATABASE_URL;
 
 export let db: any = null;
-export let isSimulated = false;
+export let isSimulated = true; // default to safe simulated mode until a real connection is established
 
-// Determine connection method
-if (connectionString && connectionString.includes('neon.tech')) {
-  try {
-    const pool = new Pool({ connectionString });
-    db = drizzle(pool, { schema });
-    console.log('⚡ Neon Serverless Pool initialized successfully.');
-  } catch (error) {
-    console.error('❌ Failed to initialize Neon Connection Pool. Falling back to simulation.', error);
+async function initDb() {
+  if (!connectionString) {
+    console.warn('⚠️ No DATABASE_URL provided — running in SIMULATION mode.');
     isSimulated = true;
+    return;
   }
-} else if (connectionString && !connectionString.includes('placeholder')) {
+
+  // Try Neon first if the connection string looks like Neon
   try {
+    if (connectionString.includes('neon.tech')) {
+      const pool = new Pool({ connectionString });
+      db = drizzle(pool, { schema });
+      isSimulated = false;
+      console.log('⚡ Neon Serverless Pool initialized successfully.');
+      return;
+    }
+
+    // Otherwise try a standard Postgres client (useful for local or other providers)
     const { default: pg } = await import('pg');
     const pool = new pg.Pool({ connectionString });
     const { drizzle: drizzleNode } = await import('drizzle-orm/node-postgres');
     db = drizzleNode(pool, { schema });
-    console.log('⚡ Local PostgreSQL Node-Client initialized successfully.');
-  } catch (error) {
-    console.error('❌ Local PostgreSQL database connection failed. Falling back to simulation.', error);
+    isSimulated = false;
+    console.log('⚡ Postgres client initialized successfully.');
+    return;
+  } catch (err) {
+    console.error('❌ Database initialization failed — falling back to simulation mode.', err);
+    db = null;
     isSimulated = true;
   }
-} else {
-  console.log('⚠️ No active DATABASE_URL provided. Operating in high-density SIMULATION mode.');
-  isSimulated = true;
 }
+
+// Initialize immediately (top-level await allowed in ESM)
+await initDb();

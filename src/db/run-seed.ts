@@ -43,7 +43,11 @@ async function run() {
 
   try {
     console.log('🧹 Truncating tables (anomaly_logs, inventory_snapshots, sales_transactions, products)...');
-    await pool.query('TRUNCATE TABLE anomaly_logs, inventory_snapshots, sales_transactions, products RESTART IDENTITY CASCADE;');
+    // Truncate in reverse dependency order (children first, then parents)
+    await pool.query('TRUNCATE TABLE anomaly_logs CASCADE;');
+    await pool.query('TRUNCATE TABLE inventory_snapshots CASCADE;');
+    await pool.query('TRUNCATE TABLE sales_transactions CASCADE;');
+    await pool.query('TRUNCATE TABLE products RESTART IDENTITY CASCADE;');
     console.log('✅ Tables truncated.');
 
     console.log(`📥 Seeding ${products.length} products...`);

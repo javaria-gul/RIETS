@@ -157,7 +157,7 @@ export default function App() {
             <div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Active Exceptions</p>
               <h3 className="text-2xl font-black text-slate-100 tech-font">
-                {isKpisLoading ? '---' : kpis?.activeAnomalies}
+                {isKpisLoading ? '---' : (kpis?.activeAnomalies ?? 0)}
               </h3>
               <p className="text-[10px] text-slate-400 font-semibold mt-1">Pending analyst evaluation</p>
             </div>
@@ -171,7 +171,7 @@ export default function App() {
             <div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Critical Threat Level</p>
               <h3 className="text-2xl font-black text-rose-450 tech-font">
-                {isKpisLoading ? '---' : kpis?.criticalSeverity}
+                {isKpisLoading ? '---' : (kpis?.criticalSeverity ?? 0)}
               </h3>
               <p className="text-[10px] text-slate-400 font-semibold mt-1">Immediate action required</p>
             </div>
@@ -185,7 +185,7 @@ export default function App() {
             <div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Return Ratio Excess</p>
               <h3 className="text-2xl font-black text-amber-450 tech-font">
-                {isKpisLoading ? '---' : kpis?.highReturnRatioRisks}
+                {isKpisLoading ? '---' : (kpis?.highReturnRatioRisks ?? 0)}
               </h3>
               <p className="text-[10px] text-slate-400 font-semibold mt-1">SKUs with returns &gt; 45%</p>
             </div>
@@ -199,7 +199,7 @@ export default function App() {
             <div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Stalled Capital</p>
               <h3 className="text-2xl font-black text-purple-400 tech-font">
-                {isKpisLoading ? '---' : `$${kpis?.totalRevenueStalled.toLocaleString()}`}
+                {isKpisLoading ? '---' : `$${(kpis?.totalRevenueStalled ?? 0).toLocaleString()}`}
               </h3>
               <p className="text-[10px] text-slate-400 font-semibold mt-1">Value on stock with zero sales</p>
             </div>

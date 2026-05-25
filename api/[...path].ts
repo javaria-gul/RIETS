@@ -105,7 +105,7 @@ export default async function handler(req: any, res: any) {
       return sendJson(res, 404, { error: 'Not found' });
     }
 
-    if (segments.length === 2 && segments[1] === 'detection' && method === 'POST') {
+    if (segments.length === 3 && segments[1] === 'detection' && segments[2] === 'run' && method === 'POST') {
       logger.info('API Triggered: Exception Audit Sweeper');
       const auditResult = await runDetectionAudit();
       logger.info({ auditResult }, 'Exception Audit completed successfully');

@@ -138,11 +138,11 @@ npm run dev
 
 ## Deployment Notes
 
-This repository uses a Vite frontend and an Express backend.
+This repository is ready for a **Vercel-only deployment**.
 
-- **Frontend:** deploy on Vercel
-- **Database:** use Neon PostgreSQL or another managed Postgres
-- **Backend API:** deploy on Render / Railway / Fly.io / another Node host
+- **Frontend:** Vercel
+- **Backend API:** Vercel Serverless Functions
+- **Database:** Neon PostgreSQL
 
 For detailed deployment instructions, see [VERCEL_DEPLOYMENT_GUIDE.md](VERCEL_DEPLOYMENT_GUIDE.md).
 
@@ -164,11 +164,10 @@ For detailed deployment instructions, see [VERCEL_DEPLOYMENT_GUIDE.md](VERCEL_DE
 ## Recommended Production Flow
 
 1. Push code to GitHub
-2. Configure PostgreSQL
-3. Seed data
-4. Deploy backend API
-5. Deploy frontend to Vercel
-6. Connect frontend to the deployed API URL
+2. Configure Neon PostgreSQL
+3. Add `DATABASE_URL` in Vercel project settings
+4. Deploy the project to Vercel
+5. Confirm the KPI cards and anomaly feed are populated
 
 ## Troubleshooting
 

@@ -16,14 +16,15 @@ async function run() {
   console.log('🔌 Connecting to database for seeding...');
 
   let db: any;
+  let pool: any;
 
   try {
     if (connectionString.includes('neon.tech')) {
-      const pool = new Pool({ connectionString });
+      pool = new Pool({ connectionString });
       db = drizzle(pool, { schema });
     } else {
       const { default: pg } = await import('pg');
-      const pool = new pg.Pool({ connectionString });
+      pool = new pg.Pool({ connectionString });
       const { drizzle: drizzleNode } = await import('drizzle-orm/node-postgres');
       db = drizzleNode(pool, { schema });
     }
@@ -42,7 +43,7 @@ async function run() {
 
   try {
     console.log('🧹 Truncating tables (anomaly_logs, inventory_snapshots, sales_transactions, products)...');
-    await db.execute(`TRUNCATE TABLE anomaly_logs, inventory_snapshots, sales_transactions, products RESTART IDENTITY CASCADE;`);
+    await pool.query('TRUNCATE TABLE anomaly_logs, inventory_snapshots, sales_transactions, products RESTART IDENTITY CASCADE;');
     console.log('✅ Tables truncated.');
 
     console.log(`📥 Seeding ${products.length} products...`);
@@ -64,9 +65,15 @@ async function run() {
     console.log('✅ Transactions seeded.');
 
     console.log('🎉 Database seeding finished successfully.');
+    if (typeof pool.end === 'function') {
+      await pool.end();
+    }
     process.exit(0);
   } catch (err) {
     console.error('❌ Seeding failed:', err);
+    if (typeof pool?.end === 'function') {
+      await pool.end();
+    }
     process.exit(1);
   }
 }

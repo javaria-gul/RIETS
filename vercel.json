@@ -1,5 +1,64 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist"
+  "builds": [
+    {
+      "src": "api/**/*.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "api/_utils.ts",
+          "src/db/**",
+          "drizzle.config.ts"
+        ]
+      }
+    },
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/anomalies",
+      "dest": "/api/anomalies/index.ts"
+    },
+    {
+      "src": "/api/anomalies/(?<id>[^/]+)",
+      "dest": "/api/anomalies/[id].ts"
+    },
+    {
+      "src": "/api/detection/run",
+      "dest": "/api/detection/run.ts"
+    },
+    {
+      "src": "/api/products",
+      "dest": "/api/products/index.ts"
+    },
+    {
+      "src": "/api/products/(?<id>[^/]+)",
+      "dest": "/api/products/[id].ts"
+    },
+    {
+      "src": "/api/telemetry/system",
+      "dest": "/api/telemetry/system.ts"
+    },
+    {
+      "src": "/api/telemetry/summary",
+      "dest": "/api/telemetry/summary.ts"
+    },
+    {
+      "src": "/api/telemetry/category-chart",
+      "dest": "/api/telemetry/category-chart.ts"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 }

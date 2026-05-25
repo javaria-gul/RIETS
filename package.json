@@ -13,7 +13,9 @@
     "db:generate": "drizzle-kit generate",
     "db:reset": "tsx src/db/reset.ts",
     "db:push": "drizzle-kit push:pg",
-    "db:seed": "tsx src/db/seed.ts"
+    "db:seed": "tsx src/db/seed.ts",
+    "seed": "tsx src/db/seed.ts"
+    
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.3",

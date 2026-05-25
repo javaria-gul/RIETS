@@ -101,6 +101,15 @@ export default async function handler(req: any, res: any) {
     const segments = url.pathname.split('/').filter(Boolean);
     const method = String(req.method || 'GET').toUpperCase();
 
+    if (segments.length === 2 && segments[1] === 'debug' && method === 'GET') {
+      return sendJson(res, 200, {
+        runtime: 'vercel-serverless',
+        hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+        dbStatus: isSimulated ? 'simulation' : 'connected',
+        neonUrlMatch: Boolean(process.env.DATABASE_URL?.includes('neon.tech')),
+      });
+    }
+
     if (segments[0] !== 'api') {
       return sendJson(res, 404, { error: 'Not found' });
     }

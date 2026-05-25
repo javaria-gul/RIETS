@@ -529,6 +529,16 @@ router.get('/telemetry/system', (req, res) => {
   });
 });
 
+// Diagnostics endpoint to confirm runtime DB availability
+router.get('/debug', (req, res) => {
+  return res.status(200).json({
+    runtime: 'express-dev',
+    hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+    dbStatus: isSimulated ? 'simulation' : 'connected',
+    neonUrlMatch: Boolean(process.env.DATABASE_URL?.includes('neon.tech')),
+  });
+});
+
 // Telemetry Stats Dashboard aggregation
 router.get('/telemetry/summary', async (req, res) => {
   try {

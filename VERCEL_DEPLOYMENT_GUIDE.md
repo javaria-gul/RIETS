@@ -72,3 +72,26 @@ If the database is empty, the app will try to bootstrap demo data.
 - [ ] Vercel deployment triggered again
 - [ ] API routes respond without errors
 - [ ] KPI cards show non-zero values
+
+## 8) Browser debug check
+
+After redeploy, open:
+
+```text
+https://riets.vercel.app/api/debug
+```
+
+Expected response:
+
+```json
+{
+	"runtime": "vercel-serverless",
+	"hasDatabaseUrl": true,
+	"dbStatus": "connected",
+	"neonUrlMatch": true
+}
+```
+
+If `hasDatabaseUrl` is `false`, your Vercel environment variable is not set correctly.
+
+If `dbStatus` is `simulation`, the app is still falling back instead of connecting to Neon.

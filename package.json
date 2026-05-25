@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "concurrently -n \"api,web\" -c \"cyan,magenta\" \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "tsx watch src/index.ts",
-    "dev:frontend": "vite",
+    "dev:frontend": "node scripts/wait-for-backend.mjs && vite",
     "build": "tsc && vite build",
     "db:generate": "drizzle-kit generate",
     "db:reset": "tsx src/db/reset.ts",

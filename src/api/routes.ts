@@ -3,7 +3,7 @@ import { eq, desc, and, or, sql } from 'drizzle-orm';
 import { db, isSimulated } from '../db/index.ts';
 import { products as productsTable, salesTransactions as transactionsTable, inventorySnapshots as snapshotsTable, anomalyLogs as anomalyTable } from '../db/schema.ts';
 import { generateMockData } from '../db/mockGenerator.ts';
-import { simDb } from '../db/simulation.ts';
+import { runSimulationAudit, simDb } from '../db/simulation.ts';
 import { runDetectionAudit } from '../services/detection.ts';
 import { logger } from '../utils/logger.ts';
 import { v4 as uuidv4 } from 'uuid';

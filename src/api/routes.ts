@@ -457,76 +457,103 @@ router.delete('/products/:id', async (req, res) => {
 
 // --- 5. GET /api/telemetry/system ---
 // Live environment telemetry reporting
-router.get('/telemetry/system', (req, res) => {
-  const now = new Date();
-  
-  // Calculate synthetic live telemetry metrics with slight time-based sine fluctuations
-  const secFactor = now.getSeconds();
-  
-  const baseCpu = 25 + Math.sin(Date.now() / 20000) * 12;
-  const cpuRandom = Math.random() * 4;
-  const cpuUsage = Math.min(100, Math.max(0, baseCpu + cpuRandom)).toFixed(1);
+router.get('/telemetry/system', async (req, res) => {
+  try {
+    await ensureTelemetryData();
 
-  const baseMemory = 1120 + Math.sin(Date.now() / 40000) * 80;
-  const memoryRandom = Math.random() * 15;
-  const memoryUsed = (baseMemory + memoryRandom).toFixed(0);
+    const now = new Date();
 
-  // Active Neon Pool DB Connections simulation
-  let activeConnections = 0;
-  if (!isSimulated) {
-    const baseConn = 12 + Math.floor(Math.sin(Date.now() / 60000) * 4);
-    activeConnections = Math.max(1, baseConn + Math.floor(Math.random() * 2));
-  } else {
-    // Simulated DB has 0 active pooled database network connections
-    activeConnections = 0;
-  }
+    const baseCpu = 25 + Math.sin(Date.now() / 20000) * 12;
+    const cpuRandom = Math.random() * 4;
+    const cpuUsage = Math.min(100, Math.max(0, baseCpu + cpuRandom)).toFixed(1);
 
-  // Calculate executive KPI summary statistics on-the-fly
-  let activeAnomaliesCount = 0;
-  let criticalSeverityCount = 0;
-  let highReturnRatioCount = 0;
-  let totalRevenueStalled = 0;
+    const baseMemory = 1120 + Math.sin(Date.now() / 40000) * 80;
+    const memoryRandom = Math.random() * 15;
+    const memoryUsed = (baseMemory + memoryRandom).toFixed(0);
 
-  if (isSimulated || !db) {
-    const activeAnomalies = simDb.anomalyLogs.filter(l => !l.isResolved);
-    activeAnomaliesCount = activeAnomalies.length;
-    criticalSeverityCount = activeAnomalies.filter(l => l.severity === 'critical').length;
-    highReturnRatioCount = activeAnomalies.filter(l => l.anomalyType === 'Excessive Return Ratio').length;
-    
-    // Revenue stalled = sum of value of items in Zero Sales with Stock
-    activeAnomalies.forEach(anomaly => {
-      if (anomaly.anomalyType === 'Zero Sales with Stock') {
-        const product = simDb.products.find(p => p.id === anomaly.productId);
-        if (product) {
-          const snaps = simDb.snapshots.filter(s => s.productId === product.id);
-          const latestSnap = snaps.length > 0 ? snaps.reduce((l, c) => c.snapshotAt > l.snapshotAt ? c : l, snaps[0]) : null;
-          if (latestSnap) {
-            totalRevenueStalled += parseFloat(product.price) * latestSnap.quantityOnHand;
+    let activeConnections = 0;
+    if (!isSimulated) {
+      const baseConn = 12 + Math.floor(Math.sin(Date.now() / 60000) * 4);
+      activeConnections = Math.max(1, baseConn + Math.floor(Math.random() * 2));
+    }
+
+    let activeAnomaliesCount = 0;
+    let criticalSeverityCount = 0;
+    let highReturnRatioCount = 0;
+    let totalRevenueStalled = 0;
+
+    if (isSimulated || !db) {
+      const activeAnomalies = simDb.anomalyLogs.filter(l => !l.isResolved);
+      activeAnomaliesCount = activeAnomalies.length;
+      criticalSeverityCount = activeAnomalies.filter(l => l.severity === 'critical').length;
+      highReturnRatioCount = activeAnomalies.filter(l => l.anomalyType === 'Excessive Return Ratio').length;
+
+      activeAnomalies.forEach(anomaly => {
+        if (anomaly.anomalyType === 'Zero Sales with Stock') {
+          const product = simDb.products.find(p => p.id === anomaly.productId);
+          if (product) {
+            const snaps = simDb.snapshots.filter(s => s.productId === product.id);
+            const latestSnap = snaps.length > 0 ? snaps.reduce((l, c) => c.snapshotAt > l.snapshotAt ? c : l, snaps[0]) : null;
+            if (latestSnap) {
+              totalRevenueStalled += parseFloat(product.price) * latestSnap.quantityOnHand;
+            }
           }
         }
-      }
-    });
-  } else {
-    // For connected DB, we will fetch statistics when building telemetry or just compute them
-    // To make it super fast, we can run a quick aggregate select
-    // Since this endpoint runs every 5 seconds, let's keep it extremely fast
-    // We will do a direct count
-    // Wait, let's define that we will return the stats dynamically as well.
-    // If the database fails, we return simulated stats.
-  }
+      });
+    } else {
+      const activeAnomalies = await db
+        .select({
+          id: anomalyTable.id,
+          productId: anomalyTable.productId,
+          anomalyType: anomalyTable.anomalyType,
+          severity: anomalyTable.severity,
+          productPrice: productsTable.price,
+        })
+        .from(anomalyTable)
+        .leftJoin(productsTable, eq(anomalyTable.productId, productsTable.id))
+        .where(eq(anomalyTable.isResolved, false));
 
-  return res.status(200).json({
-    cpu: parseFloat(cpuUsage),
-    memory: {
-      usedMB: parseInt(memoryUsed),
-      totalMB: 4096, // 4GB serverless lambda container slice
-      percentage: parseFloat(((parseInt(memoryUsed) / 4096) * 100).toFixed(1))
-    },
-    dbConnections: activeConnections,
-    dbStatus: isSimulated ? 'Simulation' : 'Operational',
-    neonPoolStatus: isSimulated ? 'Offline Fallback' : 'Stable',
-    timestamp: now.toISOString()
-  });
+      activeAnomaliesCount = activeAnomalies.length;
+      criticalSeverityCount = activeAnomalies.filter((a: any) => a.severity === 'critical').length;
+      highReturnRatioCount = activeAnomalies.filter((a: any) => a.anomalyType === 'Excessive Return Ratio').length;
+
+      const stalledSum = await db.execute(sql`
+        SELECT COALESCE(SUM(p.price * snap.quantity_on_hand), 0) as stalled
+        FROM anomaly_logs al
+        JOIN products p ON p.id = al.product_id
+        LEFT JOIN LATERAL (
+          SELECT quantity_on_hand
+          FROM inventory_snapshots
+          WHERE product_id = p.id
+          ORDER BY snapshot_at DESC
+          LIMIT 1
+        ) snap ON true
+        WHERE al.anomaly_type = 'Zero Sales with Stock' AND al.is_resolved = false;
+      `);
+
+      totalRevenueStalled = parseFloat((stalledSum.rows[0] as any)?.stalled || '0');
+    }
+
+    return res.status(200).json({
+      cpu: parseFloat(cpuUsage),
+      memory: {
+        usedMB: parseInt(memoryUsed),
+        totalMB: 4096,
+        percentage: parseFloat(((parseInt(memoryUsed) / 4096) * 100).toFixed(1)),
+      },
+      dbConnections: activeConnections,
+      dbStatus: isSimulated ? 'Simulation' : 'Operational',
+      neonPoolStatus: isSimulated ? 'Offline Fallback' : 'Stable',
+      activeAnomalies: activeAnomaliesCount,
+      criticalSeverity: criticalSeverityCount,
+      highReturnRatioRisks: highReturnRatioCount,
+      totalRevenueStalled: Math.round(totalRevenueStalled),
+      timestamp: now.toISOString(),
+    });
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Failed telemetry system response');
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 // Diagnostics endpoint to confirm runtime DB availability

@@ -7,7 +7,9 @@
       "config": {
         "includeFiles": [
           "api/_utils.ts",
-          "src/db/**",
+          "src/db/**/*",
+          "src/services/**/*",
+          "src/utils/**/*",
           "drizzle.config.ts"
         ]
       }
@@ -22,36 +24,8 @@
   ],
   "routes": [
     {
-      "src": "/api/anomalies",
-      "dest": "/api/anomalies/index.ts"
-    },
-    {
-      "src": "/api/anomalies/(?<id>[^/]+)",
-      "dest": "/api/anomalies/[id].ts"
-    },
-    {
-      "src": "/api/detection/run",
-      "dest": "/api/detection/run.ts"
-    },
-    {
-      "src": "/api/products",
-      "dest": "/api/products/index.ts"
-    },
-    {
-      "src": "/api/products/(?<id>[^/]+)",
-      "dest": "/api/products/[id].ts"
-    },
-    {
-      "src": "/api/telemetry/system",
-      "dest": "/api/telemetry/system.ts"
-    },
-    {
-      "src": "/api/telemetry/summary",
-      "dest": "/api/telemetry/summary.ts"
-    },
-    {
-      "src": "/api/telemetry/category-chart",
-      "dest": "/api/telemetry/category-chart.ts"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     },
     {
       "handle": "filesystem"

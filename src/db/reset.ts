@@ -14,25 +14,13 @@ async function main() {
   const pool = new Pool({ connectionString });
 
   try {
-    // Drop all tables in correct dependency order (children first)
     await pool.query(`
-      DROP TABLE IF EXISTS anomaly_logs CASCADE;
-      DROP TABLE IF EXISTS inventory_snapshots CASCADE;
-      DROP TABLE IF EXISTS sales_transactions CASCADE;
-      DROP TABLE IF EXISTS products CASCADE;
-      DROP TABLE IF EXISTS users CASCADE;
+      DROP SCHEMA IF EXISTS public CASCADE;
+      CREATE SCHEMA public;
+      GRANT ALL ON SCHEMA public TO public;
     `);
-    console.log('✅ All tables dropped successfully.');
 
-    // Drop all custom enums
-    await pool.query(`
-      DROP TYPE IF EXISTS user_role CASCADE;
-      DROP TYPE IF EXISTS product_status CASCADE;
-      DROP TYPE IF EXISTS transaction_type CASCADE;
-      DROP TYPE IF EXISTS anomaly_severity CASCADE;
-    `);
-    console.log('✅ All custom enums dropped successfully.');
-
+    console.log('✅ Public schema wiped and recreated successfully.');
     console.log('🎉 Database fully reset! Now run: npm run db:push && npm run db:seed');
   } catch (error) {
     console.error('❌ Reset failed:', error);
